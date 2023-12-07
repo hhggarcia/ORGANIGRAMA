@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en-US">
+	<head>
+		<!-- meta block -->
+		<title>Diagram with Editor in mindmap mode - DHTMLX Diagram</title>
+		<meta name="description" content="">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" charset="utf-8">
+		<link rel="shortcut icon" href="./common/favicon/favicon.ico" type="image/x-icon" />
+		<link rel="icon" href="./common/favicon/icon-16.png" sizes="16x16" />
+		<link rel="icon" href="./common/favicon/icon-32.png" sizes="32x32" />
+		<link rel="icon" href="./common/favicon/icon-48.png" sizes="48x48" />
+		<link rel="icon" href="./common/favicon/icon-96.png" sizes="96x96" />
+		<link rel="icon" href="./common/favicon/icon-144.png" sizes="144x144" />
+		<!-- end meta block -->
+		<link rel="stylesheet" href="./common/index.css?v=5.0.3">
+		<!-- custom sample head -->
+		<script type="text/javascript" src="./common/data.js?v=5.0.3"></script>
+		<script type="text/javascript" src="../codebase/diagramWithEditor.js?v=5.0.3"></script>
+		<link rel="stylesheet" href="../codebase/diagramWithEditor.css?v=5.0.3">
+		<style>
+			html, body, .dhx_diagram {
+				background: #fff;
+			}
+			.dhx_sample-container__without-editor {
+				height: calc(100% - 121px);
+			}
+			.dhx_sample-container__with-editor {
+				height: calc(100% - 61px);
+			}
+			.dhx_sample-widget {
+				height: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		<header class="dhx_sample-header">
+			<div class="dhx_sample-header__main">
+				<nav class="dhx_sample-header__breadcrumbs">
+					<ul class="dhx_sample-header-breadcrumbs">
+						<li class="dhx_sample-header-breadcrumbs__item">
+							<a href="./index.html" class="dhx_sample-header-breadcrumbs__link">Back to Diagram samples</a>
+						</li>
+					</ul>
+				</nav>
+				<h1 class="dhx_sample-header__title">
+					<div class="dhx_sample-header__content">
+						Diagram with Editor in mindmap mode
+					</div>
+				</h1>
+			</div>
+		</header>
+		<section id="controls" class="dhx_sample-controls">
+			<button class="dhx_sample-btn dhx_sample-btn--flat" onclick="runEditor()">Edit</button>
+		</section>
+		<section id="container" class="dhx_sample-container__without-editor">
+			<div class="dhx_sample-widget" id="diagram"></div>
+			<div class="dhx_sample-widget" id="editor" style="display: none;"></div>
+		</section>
+		<script>
+			const diagram = new dhx.Diagram("diagram", {
+				type: "mindmap",
+			});
+			
+			const editor = new dhx.DiagramEditor("editor", {
+				type: "mindmap",
+			});
+
+			const editorCont = document.querySelector("#editor");
+			const diagramCont = document.querySelector("#diagram");
+			const controls = document.querySelector("#controls");
+			const container = document.querySelector("#container");
+			
+			const WITH_EDITOR = "dhx_sample-container__with-editor";
+			const WITHOUT_EDITOR = "dhx_sample-container__without-editor";
+
+			function expand() {
+				diagramCont.style.display = "none";
+				controls.style.display = "none";
+				editorCont.style.display = "block";
+				container.classList.remove(WITHOUT_EDITOR);
+				container.classList.add(WITH_EDITOR);
+			}
+
+			function collapse() {
+				diagramCont.style.display = "block";
+				controls.style.display = "flex";
+				editorCont.style.display = "none";
+				container.classList.remove(WITH_EDITOR);
+				container.classList.add(WITHOUT_EDITOR);
+			}
+
+			function runEditor() {
+				expand();
+				editor.import(diagram);
+			}
+
+			editor.events.on("ApplyButton", function () {
+				collapse();
+				diagram.data.parse(editor.serialize());
+			});
+
+			editor.events.on("ResetButton", function () {
+				collapse();
+			});
+
+			diagram.data.parse(mindmap_data);
+		</script>
+	</body>
+</html>

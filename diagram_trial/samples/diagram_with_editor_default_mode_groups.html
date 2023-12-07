@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en-US">
+	<head>
+		<!-- meta block -->
+		<title>Diagram with Editor in default mode. Groups to organize shapes - DHTMLX Diagram</title>
+		<meta name="description" content="">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" charset="utf-8">
+		<link rel="shortcut icon" href="./common/favicon/favicon.ico" type="image/x-icon" />
+		<link rel="icon" href="./common/favicon/icon-16.png" sizes="16x16" />
+		<link rel="icon" href="./common/favicon/icon-32.png" sizes="32x32" />
+		<link rel="icon" href="./common/favicon/icon-48.png" sizes="48x48" />
+		<link rel="icon" href="./common/favicon/icon-96.png" sizes="96x96" />
+		<link rel="icon" href="./common/favicon/icon-144.png" sizes="144x144" />
+		<!-- end meta block -->
+		<link rel="stylesheet" href="./common/index.css?v=5.0.3">
+		<!-- custom sample head -->
+		<script type="text/javascript" src="./common/data.js?v=5.0.3"></script>
+		<script type="text/javascript" src="../codebase/diagramWithEditor.js?v=5.0.3"></script>
+		<link rel="stylesheet" href="../codebase/diagramWithEditor.css?v=5.0.3">
+		<style>
+			html, body, .dhx_diagram {
+				background: #fff;
+			}
+			.dhx_sample-container__without-editor {
+				height: calc(100% - 121px);
+			}
+			.dhx_sample-container__with-editor {
+				height: calc(100% - 61px);
+			}
+			.dhx_sample-widget {
+				height: 100%;
+			}
+			.dhx-diagram-demo_group {
+				width: 100%;
+				height: 100%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-direction: column;
+				flex-wrap: nowrap;
+				overflow: hidden;
+			}
+			.dhx-diagram-demo_group__image {
+				height: 64px;
+				width: 64px;
+				background-size: contain;
+				background-repeat: no-repeat;
+			}
+			.dhx-diagram-demo_group__text {
+				overflow: hidden;
+				padding-top: 10px;
+				text-align: center;
+				word-wrap: break-word;
+				white-space: pre-wrap;
+
+				font-weight: 500;
+				line-height: 20px;
+				min-height: 50px;
+				width: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		<header class="dhx_sample-header">
+			<div class="dhx_sample-header__main">
+				<nav class="dhx_sample-header__breadcrumbs">
+					<ul class="dhx_sample-header-breadcrumbs">
+						<li class="dhx_sample-header-breadcrumbs__item">
+							<a href="./index.html" class="dhx_sample-header-breadcrumbs__link">Back to Diagram samples</a>
+						</li>
+					</ul>
+				</nav>
+				<h1 class="dhx_sample-header__title">
+					<div class="dhx_sample-header__content">
+						Diagram with Editor in default mode. Groups to organize shapes
+					</div>
+				</h1>
+			</div>
+		</header>
+		<section id="controls" class="dhx_sample-controls">
+			<button class="dhx_sample-btn dhx_sample-btn--flat" onclick="runEditor()">Edit</button>
+		</section>
+		<section id="container" class="dhx_sample-container__without-editor">
+			<div class="dhx_sample-widget" id="diagram"></div>
+			<div class="dhx_sample-widget" id="editor" style="display: none;"></div>
+		</section>
+		<script>
+			const defaults = {
+				it: {
+					width: 115,
+					height: 120,
+					text: "description",
+				}
+			};
+			const path = "./common/img/it/";
+			const extension = ".png";
+
+			const it_01 = { type: "it", img: path + "it_01" + extension, ...defaults.it };
+			const it_02 = { type: "it", img: path + "it_02" + extension, ...defaults.it };
+			const it_03 = { type: "it", img: path + "it_03" + extension, ...defaults.it };
+			const it_04 = { type: "it", img: path + "it_04" + extension, ...defaults.it };
+			const it_05 = { type: "it", img: path + "it_05" + extension, ...defaults.it };
+			const it_06 = { type: "it", img: path + "it_06" + extension, ...defaults.it };
+			const it_07 = { type: "it", img: path + "it_07" + extension, ...defaults.it };
+			const it_08 = { type: "it", img: path + "it_08" + extension, ...defaults.it };
+			const it_09 = { type: "it", img: path + "it_09" + extension, ...defaults.it };
+			const it_10 = { type: "it", img: path + "it_10" + extension, ...defaults.it };
+			const it_11 = { type: "it", img: path + "it_11" + extension, ...defaults.it };
+			const it_12 = { type: "it", img: path + "it_12" + extension, ...defaults.it };
+			const it_13 = { type: "it", img: path + "it_13" + extension, ...defaults.it };
+			const it_14 = { type: "it", img: path + "it_14" + extension, ...defaults.it };
+
+			const template = ({ img, text }) => (`
+				<div class="dhx-diagram-demo_group">
+					<div class="dhx-diagram-demo_group__image" style="background-image:url(${img});"></div>
+					<div class="dhx-diagram-demo_group__text">${text}</div>
+				</div>
+			`);
+
+			const generalGroup = {
+				type: "$group",
+				width: 390,
+				height: 350,
+				header: {
+					text: "General group",
+					closable: true,
+					fontColor: "#FFF",
+					iconColor: "#FFF",
+					fill: "#333",
+				},
+			};
+
+			const regularGroup = {
+				type: "$group",
+				width: 390,
+				height: 350,
+				header: {
+					text: "Regular group",
+					closable: true,
+				},
+			};
+
+			const diagram = new dhx.Diagram("diagram", {
+				type: "default",
+			});
+
+			const editor = new dhx.DiagramEditor("editor", {
+				type: "default",
+				shapeBarWidth: 330,
+				scalePreview: 0.7,
+				shapeSections: {
+					"Architecture items": [
+						it_01, it_02, it_03,
+						it_04, it_05, it_06,
+						it_07, it_08, it_09,
+						it_10, it_11, it_12,
+						it_13, it_14,
+					],
+					"Groups": [
+						generalGroup,
+						regularGroup
+					],
+				},
+			});
+
+			diagram.addShape("it", {
+				template: template,
+				defaults: defaults.it,
+			});
+
+			editor.diagram.addShape("it", {
+				template: template,
+				defaults: defaults.it,
+				properties: [
+					{ type: "arrange" },
+					{ type: "text" },
+				]
+			});
+
+			const editorContainer = document.querySelector("#editor");
+			const diagramContainer = document.querySelector("#diagram");
+			const controls = document.querySelector("#controls");
+			const container = document.querySelector("#container");
+			
+			const WITH_EDITOR = "dhx_sample-container__with-editor";
+			const WITHOUT_EDITOR = "dhx_sample-container__without-editor";
+
+			function expand() {
+				diagramContainer.style.display = "none";
+				controls.style.display = "none";
+				editorContainer.style.display = "block";
+				container.classList.remove(WITHOUT_EDITOR);
+				container.classList.add(WITH_EDITOR);
+			}
+
+			function collapse() {
+				diagramContainer.style.display = "block";
+				controls.style.display = "flex";
+				editorContainer.style.display = "none";
+				container.classList.remove(WITH_EDITOR);
+				container.classList.add(WITHOUT_EDITOR);
+			}
+
+			function runEditor() {
+				expand();
+				editor.import(diagram);
+			}
+
+			editor.events.on("ApplyButton", function () {
+				collapse();
+				diagram.data.parse(editor.serialize());
+			});
+
+			editor.events.on("ResetButton", function () {
+				collapse();
+			});
+
+			diagram.data.parse(group_data);
+		</script>
+	</body>
+</html>
