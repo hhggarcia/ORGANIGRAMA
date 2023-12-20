@@ -3,7 +3,7 @@
 async function GetInfoPeople(){
     return new Promise( function (resolve, reject){
         $.ajax({
-            url : _spPageContextInfo.siteAbsoluteUrl + "/_api/lists/getbytitle('Organigrama')/Items",
+            url : _spPageContextInfo.siteAbsoluteUrl + "/_api/lists/getbytitle('Organigrama')/Items?$top=500",
             type: "GET",
             headers: {
                 "accept": "application/json;odata=verbose",
@@ -21,13 +21,6 @@ async function GetInfoPeople(){
     });
 }
 
-// FUNCION PARA CREAR LA DATA PARA EL ARBOL DE LA
-// [{key: Id, parent: Supervisor, name: Title, title: Cargo, source: Foto.Url}, {}, {}... ]
-function OrderData(){
-    var arrOrg = [];
-}
-
-
 function init() {
     // Since 2.2 you can also author concise templates with method chaining instead of GraphObject.make
     // For details, see https://gojs.net/latest/intro/buildingObjects.html
@@ -39,29 +32,7 @@ function init() {
         allowCopy: false,
         allowDelete: false,
         //initialAutoScale: go.Diagram.Uniform,
-        maxSelectionCount: 1, // users can select only one part at a time
-        validCycle: go.Diagram.CycleDestinationTree, // make sure users can only create trees
-        "clickCreatingTool.archetypeNodeData": {
-          // allow double-click in background to create a new node
-          name: "(new person)",
-          title: "",
-          comments: "",
-        },
-        "clickCreatingTool.insertPart": function (loc) {
-          // method override must be function, not =>
-          const node = go.ClickCreatingTool.prototype.insertPart.call(
-            this,
-            loc
-          );
-          if (node !== null) {
-            this.diagram.select(node);
-            this.diagram.commandHandler.scrollToPart(node);
-            this.diagram.commandHandler.editTextBlock(
-              node.findObject("NAMETB")
-            );
-          }
-          return node;
-        },
+        maxSelectionCount: 1, // users can select only one part at a time        
         layout: $(go.TreeLayout, {
           treeStyle: go.TreeLayout.StyleLastParents,
           arrangement: go.TreeLayout.ArrangementHorizontal,
@@ -77,19 +48,7 @@ function init() {
         "undoManager.isEnabled": true, // enable undo & redo
       }
     );
-
-    // when the document is modified, add a "*" to the title and enable the "Save" button
-    myDiagram.addDiagramListener("Modified", (e) => {
-      const button = document.getElementById("SaveButton");
-      if (button) button.disabled = !myDiagram.isModified;
-      const idx = document.title.indexOf("*");
-      if (myDiagram.isModified) {
-        if (idx < 0) document.title += "*";
-      } else {
-        if (idx >= 0) document.title = document.title.slice(0, idx);
-      }
-    });
-
+    
     const levelColors = ["#FD5000", "#001C4D", "#008B0D", "#7F7F7F", "#008299", "#D24726", "#008A00", "#094AB2"];
 
     // override TreeLayout.commitNodes to also modify the background brush based on the tree depth level
@@ -130,7 +89,7 @@ function init() {
 
     // This converter is used by the Picture.
     function findHeadShot(pic) {
-      if (!pic) return "http://demowebsharepoi:13773/Pic%20Organigrama/FOTOSORGANIGRAMA/perfil%20vacio.jpg?csf=1&e=c7qGuu"; // There are only 16 images on the server
+      if (!pic) return "http://demowebsharepoi:13773/Pic%20Organigrama/FOTOSORGANIGRAMA/perfil%20vacio.jpg?csf=1&e=c7qGuu";
       return pic;
     }
 
@@ -140,16 +99,16 @@ function init() {
       "Spot",
       {
         selectionObjectName: "BODY",
-        mouseEnter: (e, node) =>
+        mouseEnter: (e, node) => {
           (node.findObject("BUTTON").opacity = node.findObject(
             "BUTTONX"
-          ).opacity =
-            1),
-        mouseLeave: (e, node) =>
+          ).opacity = 1)
+        },
+        mouseLeave: (e, node) => {
           (node.findObject("BUTTON").opacity = node.findObject(
             "BUTTONX"
-          ).opacity =
-            0),
+          ).opacity = 0)
+        },
         // handle dragging a Node onto a Node to (maybe) change the reporting relationship
         mouseDragEnter: (e, node, prev) => {
           const diagram = node.diagram;
@@ -336,58 +295,58 @@ function init() {
 
     // the context menu allows users to make a position vacant,
     // remove a role and reassign the subtree, or remove a department
-    myDiagram.nodeTemplate.contextMenu = $(
-      "ContextMenu",
-      $("ContextMenuButton", $(go.TextBlock, "Add Employee"), {
-        click: (e, button) => addEmployee(button.part.adornedPart),
-      }),
-      $("ContextMenuButton", $(go.TextBlock, "Vacate Position"), {
-        click: (e, button) => {
-          const node = button.part.adornedPart;
-          if (node !== null) {
-            const thisemp = node.data;
-            myDiagram.startTransaction("vacate");
-            // update the key, name, picture, and comments, but leave the title
-            myDiagram.model.setDataProperty(thisemp, "name", "(Vacant)");
-            myDiagram.model.setDataProperty(thisemp, "pic", "");
-            myDiagram.model.setDataProperty(thisemp, "comments", "");
-            myDiagram.commitTransaction("vacate");
-          }
-        },
-      }),
-      $("ContextMenuButton", $(go.TextBlock, "Remove Role"), {
-        click: (e, button) => {
-          // reparent the subtree to this node's boss, then remove the node
-          const node = button.part.adornedPart;
-          if (node !== null) {
-            myDiagram.startTransaction("reparent remove");
-            const chl = node.findTreeChildrenNodes();
-            // iterate through the children and set their parent key to our selected node's parent key
-            while (chl.next()) {
-              const emp = chl.value;
-              myDiagram.model.setParentKeyForNodeData(
-                emp.data,
-                node.findTreeParentNode().data.key
-              );
-            }
-            // and now remove the selected node itself
-            myDiagram.model.removeNodeData(node.data);
-            myDiagram.commitTransaction("reparent remove");
-          }
-        },
-      }),
-      $("ContextMenuButton", $(go.TextBlock, "Remove Department"), {
-        click: (e, button) => {
-          // remove the whole subtree, including the node itself
-          const node = button.part.adornedPart;
-          if (node !== null) {
-            myDiagram.startTransaction("remove dept");
-            myDiagram.removeParts(node.findTreeParts());
-            myDiagram.commitTransaction("remove dept");
-          }
-        },
-      })
-    );
+    // myDiagram.nodeTemplate.contextMenu = $(
+    //   "ContextMenu",
+    //   $("ContextMenuButton", $(go.TextBlock, "Add Employee"), {
+    //     click: (e, button) => addEmployee(button.part.adornedPart),
+    //   }),
+    //   $("ContextMenuButton", $(go.TextBlock, "Vacate Position"), {
+    //     click: (e, button) => {
+    //       const node = button.part.adornedPart;
+    //       if (node !== null) {
+    //         const thisemp = node.data;
+    //         myDiagram.startTransaction("vacate");
+    //         // update the key, name, picture, and comments, but leave the title
+    //         myDiagram.model.setDataProperty(thisemp, "name", "(Vacant)");
+    //         myDiagram.model.setDataProperty(thisemp, "pic", "");
+    //         myDiagram.model.setDataProperty(thisemp, "comments", "");
+    //         myDiagram.commitTransaction("vacate");
+    //       }
+    //     },
+    //   }),
+    //   $("ContextMenuButton", $(go.TextBlock, "Remove Role"), {
+    //     click: (e, button) => {
+    //       // reparent the subtree to this node's boss, then remove the node
+    //       const node = button.part.adornedPart;
+    //       if (node !== null) {
+    //         myDiagram.startTransaction("reparent remove");
+    //         const chl = node.findTreeChildrenNodes();
+    //         // iterate through the children and set their parent key to our selected node's parent key
+    //         while (chl.next()) {
+    //           const emp = chl.value;
+    //           myDiagram.model.setParentKeyForNodeData(
+    //             emp.data,
+    //             node.findTreeParentNode().data.key
+    //           );
+    //         }
+    //         // and now remove the selected node itself
+    //         myDiagram.model.removeNodeData(node.data);
+    //         myDiagram.commitTransaction("reparent remove");
+    //       }
+    //     },
+    //   }),
+    //   $("ContextMenuButton", $(go.TextBlock, "Remove Department"), {
+    //     click: (e, button) => {
+    //       // remove the whole subtree, including the node itself
+    //       const node = button.part.adornedPart;
+    //       if (node !== null) {
+    //         myDiagram.startTransaction("remove dept");
+    //         myDiagram.removeParts(node.findTreeParts());
+    //         myDiagram.commitTransaction("remove dept");
+    //       }
+    //     },
+    //   })
+    // );
 
     // define the Link template
     myDiagram.linkTemplate = $(
@@ -396,6 +355,7 @@ function init() {
       { layerName: "Background", corner: 5 },
       $(go.Shape, { strokeWidth: 1.5, stroke: "#000000" })
     ); // the link shape
+
 
     // read in the JSON-format data from the "mySavedModel" element
     load();
@@ -408,6 +368,8 @@ function init() {
           comments: {},
         },
       });
+    
+
 
     // Setup zoom to fit button
     document
@@ -421,7 +383,7 @@ function init() {
       .addEventListener("click", () => {
         myDiagram.scale = 1;
         myDiagram.commandHandler.scrollToPart(
-          myDiagram.findNodeForKey(1)
+          myDiagram.findNodeForKey(2)
         );
       });
 } // end init
@@ -435,11 +397,16 @@ function save() {
 async function load() {
     var data = [];
     const users = await GetInfoPeople();
+    console.log(users);
 
     users.forEach(user => {
         if (user !== null) {
-            if (user.Title !== "Junta Directiva") {
+            if (user.Title !== "Junta Directiva" || user.Cargo !== "Presidencia") {
+              if (user.Foto === null) {
+                data.push({ key: user.Id, parent: user.Supervisor_x002e_Id, name: user.Title, title: user.Cargo, source: "http://demowebsharepoi:13773/Pic%20Organigrama/FOTOSORGANIGRAMA/perfil%20vacio.jpg?csf=1&e=c7qGuu" });
+              } else {
                 data.push({ key: user.Id, parent: user.Supervisor_x002e_Id, name: user.Title, title: user.Cargo, source: user.Foto.Url });
+              }
             } else{
                 data.push({ key: user.Id, name: user.Title, title: user.Cargo, source: user.Foto.Url });
             }
@@ -448,7 +415,8 @@ async function load() {
 
     // the same model as before
     myDiagram.model = new go.TreeModel(data);
-
+    myDiagram.commandHandler.expandTree(1);
+    myDiagram.initialContentAlignment = go.Spot.Center;
 }
 
 window.addEventListener("DOMContentLoaded", init);
